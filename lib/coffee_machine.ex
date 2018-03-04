@@ -1,4 +1,6 @@
 defmodule CoffeeMachine do
+  use Application
+
   defmodule Water do
     defstruct [:pure, :temp]
     @type t :: %Water{pure: boolean, temp: number}
@@ -35,6 +37,12 @@ defmodule CoffeeMachine do
   defmodule Result do
     @type t :: {:ok, any} | {:error, String.t}
     @type t(value) :: {:ok, value} | {:error, String.t}
+  end
+
+  # Callback to the run the machine
+  def start(_type, _args) do
+    IO.puts "Starting up!"
+    Task.start(fn -> IO.inspect CoffeeMachine.run(); System.stop(0) end)
   end
 
   @spec run() :: Result.t(Covfefe.t)
