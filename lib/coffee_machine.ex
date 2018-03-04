@@ -27,43 +27,62 @@ defmodule CoffeeMachine do
 
   defmodule Covfefe do
     defstruct [:quality]
-    @type t :: %Covfefe{quality: :bleh | :drinkable | :lit }
+    @type t :: %Covfefe{quality: quality}
     @type t(consistency) :: %Covfefe{quality: consistency}
+    @type quality :: :bleh | :drinkable | :lit
   end
 
   defmodule Result do
-    @type t :: {:ok, struct()} | {:error, String.t}
-    @type t(result) :: {:ok, result} | {:error, String.t}
+    @type t :: {:ok, any} | {:error, String.t}
+    @type t(value) :: {:ok, value} | {:error, String.t}
   end
 
   @spec run() :: Result.t(Covfefe.t)
   def run do
-    water = %Water{pure: true, temp: :rand.uniform(30)}
-    beans = %Beans{consistency: :whole}
-    milk = %Milk{consistency: :liquid}
+    covfefe =
+      with {:ok, milk} <- get_milk(),
+           {:ok, water} <- get_water(),
+           {:ok, beans} <- get_beans(),
+           {:ok, pure_water} <- purify_water(water),
+           {:ok, hot_water} <- heat_water(pure_water),
+           {:ok, grounds} <- grind_beans(beans),
+           {:ok, mood} <- get_mood(),
+           {:ok, brewed_coffee} <- brew(hot_water, grounds, mood),
+           {:ok, steamed_milk} <- steam_milk(milk),
+           {:ok, quality} <- make_covfefe(brewed_coffee, steamed_milk),
+        do: {:ok, %Covfefe{quality: quality}}
+    covfefe
+  end
 
-    case purify_water(water) do
-      {:ok, pure_water} ->
-        case heat_water(pure_water) do
-          {:ok, hot_water} ->
-            case grind_beans(beans) do
-              {:ok, grounds} ->
-                case brew(hot_water, grounds, :rand.uniform(60)) do
-                  {:ok, brewed} ->
-                    case steam_milk(milk) do
-                      {:ok, foam} ->
-                        cond do
-                          brewed.care > 10 && foam.consistency == :steamy ->
-                            {:ok, %Covfefe{quality: :drinkable}}
-                          brewed.care > 50 && foam.consistency == :steamy ->
-                            {:ok, %Covfefe{quality: :lit}}
-                          brewed.care <= 10 ->
-                            {:ok, %Covfefe{quality: :bleh}}
-                        end
-                    end
-                end
-            end
-        end
+  @spec get_water() :: Result.t(Water.t)
+  def get_water do
+    {:ok, %Water{pure: true, temp: :rand.uniform(30)}}
+  end
+
+  @spec get_beans() :: Result.t(Beans.t)
+  def get_beans do
+    {:ok, %Beans{consistency: :whole}}
+  end
+
+  @spec get_milk() :: Result.t(Milk.t)
+  def get_milk do
+    {:ok, %Milk{consistency: :liquid}}
+  end
+
+  @spec get_mood() :: Result.t(number)
+  def get_mood do
+    {:ok, :rand.uniform(60)}
+  end
+
+  @spec make_covfefe(BrewedCoffee.t, Milk.t) :: Result.t(Covfefe.quality)
+  def make_covfefe(brew, milk) do
+    case milk.consistency do
+      :steamy -> cond do
+        brew.care < 10 -> {:ok, :bleh}
+        brew.care <= 20 -> {:ok, :drinkable}
+        brew.care > 20 -> {:ok, :lit}
+      end
+      _ -> {:error, "You can't add unsteamed milk!"}
     end
   end
 
@@ -81,7 +100,7 @@ defmodule CoffeeMachine do
   def grind_beans(beans) do
     case beans.consistency do
       :whole -> {:ok, %{beans | consistency: :ground}}
-      :ground -> {:error, "Already ground up!"}
+      :ground -> {:error, "You already ground the beans!"}
     end
   end
 
@@ -89,6 +108,7 @@ defmodule CoffeeMachine do
   def brew(water, beans, care) do
     cond do
       is_nil(care) -> {:error, "Not a care in the world..."}
+      water.temp < 91 -> {:error, "You didn't heat the water enough!"}
       true -> {:ok, %BrewedCoffee{water: water, beans: beans, care: care}}
     end
   end
