@@ -3,6 +3,6 @@ defmodule CoffeeMachineTest do
   doctest CoffeeMachine
 
   test "greets the world" do
-    assert CoffeeMachine.hello() == :coffee
+    assert CoffeeMachine.hello() == :world
   end
 end
