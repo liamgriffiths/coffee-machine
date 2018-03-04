@@ -42,7 +42,9 @@ defmodule CoffeeMachine do
   # Callback to the run the machine
   def start(_type, _args) do
     IO.puts "Starting up!"
-    Task.start(fn -> IO.inspect CoffeeMachine.run(); System.stop(0) end)
+    task = Task.async(fn -> CoffeeMachine.run() end)
+    Task.await(task) |> IO.inspect
+    System.stop(0)
   end
 
   @spec run() :: Result.t(Covfefe.t)
