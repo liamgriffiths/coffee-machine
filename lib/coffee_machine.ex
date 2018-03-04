@@ -88,6 +88,7 @@ defmodule CoffeeMachine do
   def make_covfefe(brew, milk) do
     case milk.consistency do
       :steamy -> cond do
+        brew.water.pure == false -> {:ok, :bleh}
         brew.care < 10 -> {:ok, :bleh}
         brew.care <= 20 -> {:ok, :drinkable}
         brew.care > 20 -> {:ok, :lit}
