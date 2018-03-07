@@ -5,14 +5,17 @@ defmodule DairyFarm do
     @type t(consistency) :: %Milk{consistency: consistency}
   end
 
+  @spec order_milk(integer) :: Result.t([Milk.t()])
   def order_milk(amount) do
-    milk = Stream.repeatedly(&milk_cow/0)
-           |> Enum.take(amount)
-           |> Enum.map(&Task.await/1)
+    milk =
+      Stream.repeatedly(&milk_cow/0)
+      |> Enum.take(amount)
+      |> Enum.map(&Task.await/1)
+
     {:ok, milk}
   end
 
-  @spec milk_cow() :: Task.t
+  @spec milk_cow() :: Task.t()
   def milk_cow do
     Task.async(fn ->
       case Enum.random([:moo, :boo]) do

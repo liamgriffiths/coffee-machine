@@ -1,12 +1,16 @@
 defmodule CoffeeGrinder do
-  def grind(bean) when is_map(bean) do
-    %{bean | consistency: :ground}
+  # TODO not sure how to type these
+
+  # @spec grind(CoffeeJar.Bean.t) :: Task.t
+  def grind(bean = %CoffeeJar.Bean{}) do
+    Task.async(fn ->
+      %{bean | consistency: Enum.random([:course, :fine])}
+    end)
   end
 
-  def grind(beans) when is_list(beans) do
-    beans
-    |> Enum.map(&(Task.async(fn -> %{&1 | consistency: :ground} end)))
-    |> Enum.map(&Task.await/1)
-    |> Enum.reduce(%{}, &Map.merge/2)
+  # @spec grind([CoffeeJar.Bean.t()]) :: Result.t(CoffeeJar.Bean.t())
+  def grind(beans) do
+    grounds = beans |> Enum.map(&grind/1) |> Enum.map(&Task.await/1)
+    {:ok, grounds}
   end
 end
